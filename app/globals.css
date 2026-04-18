@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 10 14% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 20 14% 12%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 20 14% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    --muted: 200 7% 40%;
+    --muted-foreground: 200 7% 70%;
+
+    --accent: 280 85% 60%;
+    --accent-foreground: 200 14% 97%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 200 7% 20%;
+    --input: 200 7% 18%;
+    --ring: 280 85% 60%;
+
+    --primary: 280 85% 55%;
+    --primary-foreground: 200 14% 97%;
+
+    --secondary: 200 70% 50%;
+    --secondary-foreground: 200 14% 97%;
+
+    --radius: 1rem;
+
+    --font-sans: system-ui, -apple-system, sans-serif;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground overflow-x-hidden;
+    background-image: radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                      radial-gradient(circle at 40% 20%, rgba(168, 85, 247, 0.1) 0%, transparent 50%);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl;
+  }
+
+  .glass-dark {
+    @apply backdrop-blur-xl bg-black/40 border border-white/5 rounded-2xl;
+  }
+
+  .glass-card {
+    @apply glass p-6 hover:border-white/20 transition-all duration-300;
+  }
+
+  .glass-button {
+    @apply glass px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:border-accent/50 hover:bg-white/10 active:scale-95;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent;
+  }
+
+  .neon-glow {
+    @apply shadow-neon transition-shadow duration-300;
+  }
+
+  .neon-glow:hover {
+    @apply shadow-[0_0_30px_rgba(139,92,246,0.5)];
+  }
+
+  .blur-filter {
+    @apply backdrop-blur-md bg-black/30;
+  }
+
+  .smooth-gradient {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.5);
+  border-radius: 10px;
+  transition: background 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.8);
+}
+
+/* Selection */
+::selection {
+  background: rgba(139, 92, 246, 0.3);
+  color: inherit;
+}
+
+/* Animations */
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
