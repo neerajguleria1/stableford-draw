@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { use } from "react";
 import { supabase } from "@/lib/supabase";
 import { Heart, ArrowLeft, Calendar, ExternalLink, Gift } from "lucide-react";
 import Link from "next/link";
@@ -30,9 +31,9 @@ interface CharityEvent {
 export default function CharityProfilePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const charityId = params.id;
+  const charityId = use(params).id;
   const [charity, setCharity] = useState<Charity | null>(null);
   const [events, setEvents] = useState<CharityEvent[]>([]);
   const [loading, setLoading] = useState(true);

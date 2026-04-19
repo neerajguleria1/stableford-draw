@@ -16,23 +16,29 @@ interface Draw {
   mode: string;
 }
 
-export default function CampaignDetailPage({ params }: { params: { id: string } }) {
+export default function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [draw, setDraw] = useState<Draw | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [drawId, setDrawId] = useState<string>("");
 
   useEffect(() => {
+    params.then(({ id }) => setDrawId(id));
+  }, [params]);
+
+  useEffect(() => {
+    if (!drawId) return;
     supabase
       .from("draws")
       .select("id, name, draw_date, status, drawn_numbers, total_raised, mode")
-      .eq("id", params.id)
+      .eq("id", drawId)
       .single()
       .then(({ data, error }) => {
         if (error || !data) setNotFound(true);
         else setDraw(data);
         setLoading(false);
       });
-  }, [params.id]);
+  }, [drawId]);
 
   if (loading) {
     return (
