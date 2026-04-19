@@ -9,6 +9,7 @@ interface Charity { id: string; name: string }
 export default function ProfilePage() {
   const { user } = useAuthStore();
   const [name, setName] = useState("");
+  const [charityPct, setCharityPct] = useState(10);
   const [charities, setCharities] = useState<Charity[]>([]);
   const [selectedCharity, setSelectedCharity] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -37,6 +38,7 @@ export default function ProfilePage() {
       ]);
       setName(profileRes.data?.full_name ?? "");
       setSelectedCharity(profileRes.data?.charity_preference_id ?? "");
+      setCharityPct(profileRes.data?.charity_percentage ?? 10);
       setCharities(charitiesRes.data ?? []);
       setLoading(false);
     }
@@ -50,7 +52,7 @@ export default function ProfilePage() {
     setProfileMsg("");
     const { error } = await supabase
       .from("users_profiles")
-      .update({ full_name: name, charity_preference_id: selectedCharity || null })
+      .update({ full_name: name, charity_preference_id: selectedCharity || null, charity_percentage: charityPct })
       .eq("user_id", user.id);
     setProfileMsg(error ? error.message : "Profile updated successfully!");
     setSaving(false);
@@ -121,6 +123,26 @@ export default function ProfilePage() {
                 <option key={c.id} value={c.id} className="bg-gray-900">{c.name}</option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Charity Contribution: <span className="text-purple-400">{charityPct}%</span>
+              <span className="text-xs text-muted-foreground ml-2">(minimum 10%)</span>
+            </label>
+            <input
+              type="range"
+              min={10}
+              max={100}
+              step={5}
+              value={charityPct}
+              onChange={(e) => setCharityPct(Number(e.target.value))}
+              className="w-full accent-purple-500"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+              <span>10% (min)</span>
+              <span>100%</span>
+            </div>
           </div>
 
           {profileMsg && (

@@ -55,9 +55,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { mode = "random" } = await req.json();
+    const { mode = "random", simulate = false } = await req.json();
     const numbers = mode === "weighted" ? await weightedDraw() : randomDraw();
 
+    // In simulation mode, don't save to DB
+    if (simulate) {
+      return NextResponse.json({ draw: { id: "simulation", draw_date: new Date().toISOString() }, numbers, simulated: true });
+    }
     const { data, error } = await supabase
       .from("draws")
       .insert({

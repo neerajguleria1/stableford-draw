@@ -21,6 +21,7 @@ export default function AdminDrawRunnerPage() {
   const [mode, setMode] = useState<DrawMode>("random");
   const [totalPot, setTotalPot] = useState(0);
   const [rollover, setRollover] = useState(0);
+  const [simulate, setSimulate] = useState(false);
   const [step, setStep] = useState<Step>("idle");
   const [draw, setDraw] = useState<DrawResult | null>(null);
   const [winners, setWinners] = useState<Winner[]>([]);
@@ -42,7 +43,7 @@ export default function AdminDrawRunnerPage() {
       const res = await fetch("/api/draw", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ mode }),
+        body: JSON.stringify({ mode, simulate }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
@@ -116,6 +117,27 @@ export default function AdminDrawRunnerPage() {
               ))}
             </div>
           </div>
+
+          {/* Simulation toggle */}
+          <div className="flex items-center justify-between glass p-3 rounded-lg">
+            <div>
+              <p className="text-sm font-medium">Simulation Mode</p>
+              <p className="text-xs text-muted-foreground">Test draw without saving results</p>
+            </div>
+            <button onClick={() => setSimulate(!simulate)}
+              className={`w-12 h-6 rounded-full transition-colors relative ${
+                simulate ? "bg-purple-600" : "bg-white/20"
+              }`}>
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                simulate ? "translate-x-7" : "translate-x-1"
+              }`} />
+            </button>
+          </div>
+          {simulate && (
+            <p className="text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2">
+              ⚠️ Simulation mode — draw results will NOT be saved to the database.
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Total Pot (£)</label>

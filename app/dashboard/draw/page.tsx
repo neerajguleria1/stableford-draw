@@ -81,7 +81,7 @@ export default function DrawPage() {
     <div className="min-h-screen p-6">
       <div className="max-w-3xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-bold gradient-text">Weekly Draws</h1>
+          <h1 className="text-2xl font-bold gradient-text">Monthly Draws</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Your scores: {myScores.length > 0 ? myScores.join(", ") : "None submitted yet"}
           </p>
