@@ -41,7 +41,6 @@ export default function LoginPage() {
       }
       if (data.session) {
         setSuccess(true);
-        // Check if user has completed profile setup
         const { data: profile } = await supabase
           .from("users_profiles")
           .select("charity_preference_id")
@@ -49,9 +48,9 @@ export default function LoginPage() {
           .single();
 
         if (!profile?.charity_preference_id) {
-          router.push("/auth/signup?step=charity&userId=" + data.session.user.id);
+          window.location.href = "/auth/signup?step=charity&userId=" + data.session.user.id;
         } else {
-          router.push("/dashboard");
+          window.location.href = "/dashboard";
         }
       }
     } catch (err: any) {

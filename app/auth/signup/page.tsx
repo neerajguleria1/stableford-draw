@@ -84,6 +84,16 @@ export default function SignupPage() {
         full_name: form.name,
       });
 
+      // Send welcome email (fire and forget)
+      supabase.auth.getSession().then(({ data: sessionData }) => {
+        if (sessionData.session?.access_token) {
+          fetch("/api/notifications/welcome", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
+          }).catch(() => {});
+        }
+      });
+
       setUserId(data.user.id);
       setStep("charity");
     } catch (err: any) {

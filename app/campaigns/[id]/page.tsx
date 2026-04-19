@@ -1,301 +1,148 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
-import { Heart, Share2, Users, TrendingUp, Loader } from "lucide-react";
-import { calculateProgressPercentage, formatCurrency } from "@/lib/utils";
+import { Trophy, ArrowLeft, Calendar } from "lucide-react";
+import Link from "next/link";
 
-export default function CampaignDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const [donationAmount, setDonationAmount] = useState("");
-  const [loading, setLoading] = useState(false);
+interface Draw {
+  id: string;
+  name: string;
+  draw_date: string;
+  status: string;
+  drawn_numbers: number[];
+  total_raised: number;
+  mode: string;
+}
 
-  // Mock campaign data
-  const campaign = {
-    id: params.id,
-    title: "Clean Water Initiative",
-    description:
-      "Bringing clean water to underserved communities across sub-Saharan Africa",
-    longDescription:
-      "Water scarcity affects over 2 billion people worldwide. Our Clean Water Initiative focuses on building sustainable water infrastructure in rural communities across sub-Saharan Africa, providing clean, safe drinking water and improving sanitation.",
-    category: "Health & Water",
-    target_amount: 500000,
-    current_amount: 347500,
-    image_url: null,
-    status: "active",
-    donors: 847,
-    days_remaining: 45,
-    impacts: [
-      { metric: "People Served", value: "125,000", unit: "people" },
-      { metric: "Wells Built", value: "145", unit: "wells" },
-      { metric: "Health Improvements", value: "89%", unit: "increase" },
-      { metric: "Disease Reduction", value: "62%", unit: "decrease" },
-    ],
-  };
+export default function CampaignDetailPage({ params }: { params: { id: string } }) {
+  const [draw, setDraw] = useState<Draw | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  const progress = calculateProgressPercentage(
-    campaign.current_amount,
-    campaign.target_amount
-  );
+  useEffect(() => {
+    supabase
+      .from("draws")
+      .select("id, name, draw_date, status, drawn_numbers, total_raised, mode")
+      .eq("id", params.id)
+      .single()
+      .then(({ data, error }) => {
+        if (error || !data) setNotFound(true);
+        else setDraw(data);
+        setLoading(false);
+      });
+  }, [params.id]);
 
-  const handleDonate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
-    try {
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      alert(`Successfully donated ${formatCurrency(parseFloat(donationAmount))}`);
-      setDonationAmount("");
-    } catch (error) {
-      console.error("Error processing donation:", error);
-    } finally {
-      setLoading(false);
-    }
+  if (notFound || !draw) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="text-center space-y-4">
+          <p className="text-2xl font-bold">Draw not found</p>
+          <Link href="/campaigns" className="text-purple-400 hover:underline text-sm">← Back to draws</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const statusColor: Record<string, string> = {
+    completed: "bg-green-500/20 text-green-400",
+    pending: "bg-yellow-500/20 text-yellow-400",
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Header Image */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="h-96 bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-lg mb-12 relative overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
-      </motion.div>
+    <div className="min-h-screen p-6">
+      <div className="max-w-2xl mx-auto space-y-8">
+        <Link href="/campaigns" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors">
+          <ArrowLeft size={16} /> All Draws
+        </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="lg:col-span-2 space-y-8"
-        >
-          {/* Title */}
-          <div>
-            <span className="inline-block px-3 py-1 bg-purple-600/20 text-purple-300 text-sm rounded-full mb-4">
-              {campaign.category}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card space-y-6">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-2xl font-bold">{draw.name}</h1>
+              <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                <Calendar size={14} />
+                {new Date(draw.draw_date).toLocaleDateString("en-GB", { dateStyle: "long" })}
+              </div>
+            </div>
+            <span className={`text-xs px-3 py-1 rounded-full capitalize ${statusColor[draw.status] ?? "bg-white/10 text-muted-foreground"}`}>
+              {draw.status}
             </span>
-            <h1 className="text-5xl font-bold text-white mb-4">
-              {campaign.title}
-            </h1>
-            <p className="text-xl text-gray-400">{campaign.description}</p>
           </div>
 
-          {/* About */}
-          <Card>
-            <CardHeader>
-              <CardTitle>About This Campaign</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-400 leading-relaxed">
-                {campaign.longDescription}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Impact Metrics */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Impact Metrics</CardTitle>
-              <CardDescription>Real results from this campaign</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {campaign.impacts.map((impact, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                    className="glass p-4 rounded-lg text-center"
-                  >
-                    <p className="text-2xl font-bold gradient-text">
-                      {impact.value}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-2">{impact.metric}</p>
+          {/* Drawn Numbers */}
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-muted-foreground">Drawn Numbers</p>
+            {draw.drawn_numbers?.length > 0 ? (
+              <div className="flex gap-3 flex-wrap">
+                {draw.drawn_numbers.map((n, i) => (
+                  <motion.div key={i} initial={{ scale: 0 }} animate={{ scale: 1 }}
+                    transition={{ delay: i * 0.08, type: "spring" }}
+                    className="w-14 h-14 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-neon">
+                    {n}
                   </motion.div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            ) : (
+              <p className="text-muted-foreground text-sm">Numbers not yet drawn.</p>
+            )}
+          </div>
 
-          {/* Updates */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Campaign Updates</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+            <div>
+              <p className="text-xs text-muted-foreground">Prize Pot</p>
+              <p className="text-2xl font-bold text-green-400 mt-1">
+                £{(draw.total_raised ?? 0).toLocaleString("en-GB", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Draw Mode</p>
+              <p className="text-lg font-semibold mt-1 capitalize">{draw.mode ?? "Random"}</p>
+            </div>
+          </div>
+
+          {/* Prize Tiers */}
+          <div className="space-y-3 pt-2 border-t border-white/10">
+            <p className="text-sm font-medium">Prize Distribution</p>
+            <div className="grid grid-cols-3 gap-3">
               {[
-                {
-                  date: "2 days ago",
-                  title: "50% Funding Milestone Reached!",
-                  description:
-                    "We've hit our halfway point! Thanks to all our generous supporters.",
-                },
-                {
-                  date: "1 week ago",
-                  title: "First Well Completed",
-                  description:
-                    "The first water well in the initiative has been successfully completed and is serving 2,000 people.",
-                },
-              ].map((update, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="border-b border-white/10 pb-6 last:border-0 last:pb-0"
-                >
-                  <p className="text-sm text-gray-500 mb-2">{update.date}</p>
-                  <p className="font-semibold text-white mb-2">{update.title}</p>
-                  <p className="text-gray-400">{update.description}</p>
-                </motion.div>
+                { label: "5 Match", pct: "40%", color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/20", note: "Jackpot" },
+                { label: "4 Match", pct: "35%", color: "text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", note: "2nd Prize" },
+                { label: "3 Match", pct: "25%", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", note: "3rd Prize" },
+              ].map(({ label, pct, color, bg, note }) => (
+                <div key={label} className={`rounded-xl p-3 border text-center ${bg}`}>
+                  <p className={`text-xl font-bold ${color}`}>{pct}</p>
+                  <p className="text-xs font-medium mt-1">{label}</p>
+                  <p className="text-xs text-muted-foreground">{note}</p>
+                </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </motion.div>
 
-        {/* Sidebar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="space-y-6"
-        >
-          {/* Donation Card */}
-          <Card className="sticky top-24">
-            <CardHeader>
-              <CardTitle className="text-2xl gradient-text">
-                {formatCurrency(campaign.current_amount)}
-              </CardTitle>
-              <CardDescription>
-                of {formatCurrency(campaign.target_amount)} raised
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              {/* Progress */}
-              <div>
-                <Progress value={progress} className="h-3 mb-2" />
-                <p className="text-sm text-gray-400 text-center">
-                  {Math.round(progress)}% funded
-                </p>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <p className="text-sm text-gray-400">Donors</p>
-                  <p className="text-2xl font-bold text-white">
-                    {campaign.donors.toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400">Days Left</p>
-                  <p className="text-2xl font-bold text-accent">
-                    {campaign.days_remaining}
-                  </p>
-                </div>
-              </div>
-
-              {/* Donation Form */}
-              <form onSubmit={handleDonate} className="space-y-3">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">
-                    Donation Amount
-                  </label>
-                  <div className="flex">
-                    <span className="inline-flex items-center px-3 bg-black/40 border border-white/20 border-r-0 rounded-l-md text-gray-400">
-                      $
-                    </span>
-                    <Input
-                      type="number"
-                      placeholder="0.00"
-                      value={donationAmount}
-                      onChange={(e) => setDonationAmount(e.target.value)}
-                      className="rounded-l-none"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <Button type="submit" size="lg" className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader size={20} className="mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Heart size={20} className="mr-2" />
-                      Donate Now
-                    </>
-                  )}
-                </Button>
-              </form>
-
-              {/* Quick Amounts */}
-              <div className="grid grid-cols-3 gap-2">
-                {[25, 50, 100].map((amount) => (
-                  <Button
-                    key={amount}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setDonationAmount(amount.toString())}
-                    className="text-xs"
-                  >
-                    ${amount}
-                  </Button>
-                ))}
-              </div>
-
-              {/* Share */}
-              <Button variant="outline" className="w-full">
-                <Share2 size={20} className="mr-2" />
-                Share Campaign
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Supporters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Recent Supporters</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {[
-                { name: "Anonymous", amount: 1000 },
-                { name: "Jane Smith", amount: 500 },
-                { name: "Michael Chen", amount: 250 },
-                { name: "Emma Johnson", amount: 100 },
-              ].map((supporter, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span className="text-gray-300">{supporter.name}</span>
-                  <span className="text-accent font-semibold">
-                    ${supporter.amount}
-                  </span>
-                </motion.div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
+        <div className="glass-card text-center space-y-4 border border-purple-500/20">
+          <Trophy size={28} className="text-yellow-400 mx-auto" />
+          <p className="font-semibold">Want to enter the next draw?</p>
+          <p className="text-sm text-muted-foreground">Subscribe and submit your scores to participate.</p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Link href="/auth/signup" className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-all text-sm">
+              Subscribe Now
+            </Link>
+            <Link href="/campaigns" className="glass-button text-sm font-medium">
+              All Draws
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

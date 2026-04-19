@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendEmail, drawResultEmail } from "@/lib/email";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,23 +21,28 @@ export async function POST(req: NextRequest) {
     const payouts: Record<string, { users: string[]; perUser: number; total: number }> = {};
     let unclaimedRollover = 0;
 
-    for (const tier of ["5-match", "4-match", "3-match"] as const) {
-      const tierWinners: string[] = winners
-        .filter((w: any) => w.tier === tier)
-        .map((w: any) => w.userId);
+    // Fetch draw info for email
+    const { data: draw } = await supabase
+      .from("draws")
+      .select("name, drawn_numbers")
+      .eq("id", drawId)
+      .single();
 
+    for (const tier of ["5-match", "4-match", "3-match"] as const) {
+      const tierWinners: Array<{ userId: string; email: string; matchedNumbers: number[] }> = winners
+        .filter((w: any) => w.tier === tier);
+
+      const tierWinnerIds = tierWinners.map((w) => w.userId);
       const tierTotal = Math.floor(pot * SPLIT[tier] * 100) / 100;
 
-      if (tierWinners.length === 0) {
-        // No winners for this tier — rolls over
+      if (tierWinnerIds.length === 0) {
         unclaimedRollover += tierTotal;
         payouts[tier] = { users: [], perUser: 0, total: tierTotal };
       } else {
-        const perUser = Math.floor((tierTotal / tierWinners.length) * 100) / 100;
-        payouts[tier] = { users: tierWinners, perUser, total: tierTotal };
+        const perUser = Math.floor((tierTotal / tierWinnerIds.length) * 100) / 100;
+        payouts[tier] = { users: tierWinnerIds, perUser, total: tierTotal };
 
-        // Record each payout in DB
-        const payoutRows = tierWinners.map((userId: string) => ({
+        const payoutRows = tierWinnerIds.map((userId: string) => ({
           draw_id: drawId,
           user_id: userId,
           tier,
@@ -45,10 +51,58 @@ export async function POST(req: NextRequest) {
         }));
 
         await supabase.from("payouts").insert(payoutRows);
+
+        // Send winner notification emails
+        for (const winner of tierWinners) {
+          if (winner.email) {
+            await sendEmail({
+              to: winner.email,
+              subject: `🎉 You won the ${draw?.name ?? "GolfDraw"} draw!`,
+              html: drawResultEmail(
+                winner.email,
+                draw?.name ?? "Monthly Draw",
+                draw?.drawn_numbers ?? [],
+                winner.matchedNumbers,
+                tier,
+                perUser
+              ),
+            });
+          }
+        }
       }
     }
 
-    // Save rollover to draws table
+    // Notify non-winners too (fetch all participants who didn't win)
+    const winnerIds = new Set(winners.map((w: any) => w.userId));
+    const { data: allScoreUsers } = await supabase
+      .from("golf_scores")
+      .select("user_id, users_profiles!inner(email, full_name)")
+      .not("user_id", "in", `(${Array.from(winnerIds).join(",")})`);
+
+    if (allScoreUsers) {
+      const notified = new Set<string>();
+      for (const row of allScoreUsers as any[]) {
+        const uid = row.user_id;
+        if (notified.has(uid)) continue;
+        notified.add(uid);
+        const profile = row.users_profiles;
+        if (profile?.email) {
+          await sendEmail({
+            to: profile.email,
+            subject: `${draw?.name ?? "Monthly Draw"} results are in`,
+            html: drawResultEmail(
+              profile.full_name ?? "there",
+              draw?.name ?? "Monthly Draw",
+              draw?.drawn_numbers ?? [],
+              [],
+              null,
+              null
+            ),
+          });
+        }
+      }
+    }
+
     await supabase
       .from("draws")
       .update({ total_raised: pot, updated_at: new Date().toISOString() })

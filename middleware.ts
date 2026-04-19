@@ -1,96 +1,61 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next();
-  const pathname = request.nextUrl.pathname;
+  const { pathname } = request.nextUrl;
 
-  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const rawKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  const isValid = rawUrl?.startsWith("http://") || rawUrl?.startsWith("https://");
+  // Only protect these routes
+  const isDashboard = pathname.startsWith("/dashboard");
+  const isAdmin = pathname.startsWith("/admin");
+  if (!isDashboard && !isAdmin) return NextResponse.next();
 
-  if (!isValid) return response;
+  const response = NextResponse.next({ request });
 
-  const supabase = createClient(rawUrl!, rawKey!);
-
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    // ============================================
-    // PROTECTED: /dashboard/* routes
-    // ============================================
-    if (pathname.startsWith("/dashboard")) {
-      // Redirect to login if not authenticated
-      if (!session || !user) {
-        const loginUrl = new URL("/auth/login", request.url);
-        loginUrl.searchParams.set("redirect", pathname);
-        return NextResponse.redirect(loginUrl);
-      }
-      // Authenticated user, allow access
-      return response;
+  // Create a Supabase client that reads/writes cookies
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
     }
+  );
 
-    // ============================================
-    // PROTECTED: /admin/* routes (admin only)
-    // ============================================
-    if (pathname.startsWith("/admin")) {
-      // Redirect to login if not authenticated
-      if (!session || !user) {
-        const loginUrl = new URL("/auth/login", request.url);
-        loginUrl.searchParams.set("redirect", pathname);
-        return NextResponse.redirect(loginUrl);
-      }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-      // Check if user has admin role in JWT metadata
-      const isAdmin = user?.user_metadata?.role === "admin" || user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
-
-      if (!isAdmin) {
-        // Non-admin users redirected to dashboard
-        console.warn(`Non-admin user ${user?.email} attempted to access /admin`);
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
-
-      // Admin user, allow access
-      return response;
-    }
-
-    // ============================================
-    // REDIRECT: Authenticated users away from auth pages
-    // ============================================
-    if (
-      pathname.startsWith("/auth/login") ||
-      pathname.startsWith("/auth/signup")
-    ) {
-      if (session && user) {
-        // Authenticated users redirected to dashboard
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
-    }
-
-    // ============================================
-    // PUBLIC ROUTES: Allow all other routes
-    // ============================================
-    return response;
-  } catch (error) {
-    console.error("Middleware error:", error);
-    // On error, allow the request to proceed
-    // (safer than blocking access entirely)
-    return response;
+  // Not logged in — redirect to login
+  if (!user) {
+    const loginUrl = new URL("/auth/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
   }
+
+  // Admin check
+  if (isAdmin) {
+    const role = user.user_metadata?.role;
+    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+    const isAdminUser = role === "admin" || user.email === adminEmail;
+
+    if (!isAdminUser) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+  }
+
+  return response;
 }
 
 export const config = {
-  matcher: [
-    // Protected routes
-    "/dashboard/:path*",
-    "/admin/:path*",
-    // Auth routes
-    "/auth/login",
-    "/auth/signup",
-    "/auth/forgot-password",
-    "/auth/reset-password",
-    "/auth/verify-email",
-  ],
+  matcher: ["/dashboard/:path*", "/admin/:path*"],
 };

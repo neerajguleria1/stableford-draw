@@ -1,14 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
-if (!supabaseUrl || !supabasePublishableKey) {
-  console.warn("⚠️ Supabase credentials not configured.");
-}
+// Browser client — uses cookies so middleware can read the session
+export const supabase = createBrowserClient(supabaseUrl, supabaseKey);
 
-export const supabase = createClient(supabaseUrl, supabasePublishableKey);
-
+// Server-side admin client (uses secret key, no cookie needed)
 export const getSupabaseServiceClient = () =>
-  createClient(supabaseUrl, supabaseSecretKey);
+  createClient(supabaseUrl, process.env.SUPABASE_SECRET_KEY!);

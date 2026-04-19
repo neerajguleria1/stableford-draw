@@ -27,7 +27,7 @@ export default function ProfilePage() {
       const [profileRes, charitiesRes] = await Promise.all([
         supabase
           .from("users_profiles")
-          .select("full_name, charity_preference_id")
+          .select("full_name, charity_preference_id, charity_percentage")
           .eq("user_id", user!.id)
           .single(),
         supabase
@@ -195,17 +195,112 @@ export default function ProfilePage() {
           </button>
         </form>
 
-        {/* Danger Zone */}
-        <div className="glass-card space-y-3 border border-red-500/20">
-          <h2 className="font-semibold text-red-400">Danger Zone</h2>
-          <p className="text-sm text-muted-foreground">Cancel your subscription or delete your account.</p>
-          <div className="flex gap-3 flex-wrap">
-            <a href="/subscribe" className="text-sm text-purple-400 hover:underline">
-              Manage Subscription →
-            </a>
-          </div>
-        </div>
+        {/* Subscription Management */}
+        <SubscriptionManager userId={user?.id ?? ""} />
       </div>
+    </div>
+  );
+}
+
+function SubscriptionManager({ userId }: { userId: string }) {
+  const [sub, setSub] = useState<{ plan_type: string; status: string; next_billing_date: string | null } | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [confirm, setConfirm] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase
+      .from("subscriptions")
+      .select("plan_type, status, next_billing_date")
+      .eq("user_id", userId)
+      .single()
+      .then(({ data }) => setSub(data ?? null));
+  }, [userId]);
+
+  async function handleCancel() {
+    setCancelling(true);
+    setMsg("");
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch("/api/stripe/cancel", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session?.access_token}` },
+    });
+    const json = await res.json();
+    if (res.ok) {
+      setMsg("Subscription cancelled. You'll retain access until the end of your billing period.");
+      setSub((prev) => prev ? { ...prev, status: "cancelled" } : null);
+    } else {
+      setMsg(json.error ?? "Failed to cancel");
+    }
+    setCancelling(false);
+    setConfirm(false);
+  }
+
+  if (!sub) return null;
+
+  return (
+    <div className="glass-card space-y-3 border border-red-500/20">
+      <h2 className="font-semibold text-red-400">Subscription</h2>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <p className="text-sm font-medium capitalize">{sub.plan_type} Plan</p>
+          {sub.next_billing_date && sub.status === "active" && (
+            <p className="text-xs text-muted-foreground">
+              Renews {new Date(sub.next_billing_date).toLocaleDateString("en-GB", { dateStyle: "long" })}
+            </p>
+          )}
+        </div>
+        <span className={`text-xs px-2 py-0.5 rounded-full ${
+          sub.status === "active" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+        }`}>
+          {sub.status}
+        </span>
+      </div>
+
+      {msg && (
+        <p className={`text-sm ${msg.includes("cancelled") ? "text-green-400" : "text-red-400"}`}>{msg}</p>
+      )}
+
+      {sub.status === "active" && (
+        <>
+          {!confirm ? (
+            <button
+              onClick={() => setConfirm(true)}
+              className="text-sm text-red-400 hover:text-red-300 underline"
+            >
+              Cancel Subscription
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Are you sure? You'll lose access to draws and score entry.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelling}
+                  className="text-sm bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg disabled:opacity-50"
+                >
+                  {cancelling ? "Cancelling..." : "Yes, Cancel"}
+                </button>
+                <button
+                  onClick={() => setConfirm(false)}
+                  className="text-sm text-muted-foreground hover:text-white"
+                >
+                  Keep Subscription
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {sub.status !== "active" && (
+        <a href="/subscribe" className="text-sm text-purple-400 hover:underline">
+          Resubscribe →
+        </a>
+      )}
     </div>
   );
 }

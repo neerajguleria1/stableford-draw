@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Trophy, Heart, Flag } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 const HOW_IT_WORKS = [
   { icon: Flag, step: "1", title: "Enter Your Scores", desc: "Submit your latest Stableford golf scores — up to 5 at a time." },
@@ -16,7 +18,27 @@ const PRIZE_TIERS = [
   { match: "3 Numbers", share: "25%", label: "Third Prize", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/30" },
 ];
 
+interface FeaturedCharity {
+  id: string;
+  name: string;
+  description: string;
+  logo_url?: string;
+  total_raised: number;
+}
+
 export function HeroSection() {
+  const [featured, setFeatured] = useState<FeaturedCharity | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from("charities")
+      .select("id, name, description, logo_url, total_raised")
+      .eq("status", "active")
+      .order("total_raised", { ascending: false })
+      .limit(1)
+      .single()
+      .then(({ data }) => setFeatured(data ?? null));
+  }, []);
   return (
     <div className="space-y-0">
       {/* Hero */}
@@ -133,9 +155,46 @@ export function HeroSection() {
             A minimum of 10% of every subscription goes directly to your chosen charity.
             You choose who benefits — from cancer research to mental health support.
           </p>
+
+          {/* Featured Charity Spotlight */}
+          {featured && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              className="max-w-sm mx-auto glass rounded-xl p-4 border border-pink-500/20 text-left space-y-3"
+            >
+              <p className="text-xs text-pink-400 font-semibold uppercase tracking-wider">⭐ Spotlight Charity</p>
+              <div className="flex items-center gap-3">
+                {featured.logo_url ? (
+                  <img src={featured.logo_url} alt={featured.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Heart size={20} className="text-white" />
+                  </div>
+                )}
+                <div>
+                  <p className="font-semibold">{featured.name}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{featured.description}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Total raised</span>
+                <span className="text-green-400 font-semibold">
+                  £{(featured.total_raised ?? 0).toLocaleString("en-GB", { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <Link
+                href={`/charities/${featured.id}`}
+                className="block text-center text-xs text-pink-400 hover:text-pink-300 transition-colors"
+              >
+                Learn more →
+              </Link>
+            </motion.div>
+          )}
+
           <Link href="/charities"
             className="inline-flex items-center gap-2 bg-pink-600/20 hover:bg-pink-600/30 border border-pink-500/30 text-pink-300 font-medium px-6 py-2.5 rounded-xl transition-all">
-            See Our Charities <ArrowRight size={16} />
+            See All Charities <ArrowRight size={16} />
           </Link>
         </div>
       </section>

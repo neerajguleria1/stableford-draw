@@ -35,10 +35,20 @@ export default function AdminWinnersPage() {
   useEffect(() => { load(); }, []);
 
   async function updateStatus(id: string, status: string) {
-    await supabase.from("payouts").update({
-      status,
-      admin_note: noteId === id ? note : undefined,
-    }).eq("id", id);
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    await fetch("/api/admin/winners", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        id,
+        status,
+        admin_note: noteId === id ? note : undefined,
+      }),
+    });
     setNoteId(null);
     setNote("");
     load();
