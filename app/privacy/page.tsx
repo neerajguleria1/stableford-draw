@@ -1,77 +1,27 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 export default function PrivacyPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h1 className="text-5xl font-bold gradient-text mb-8">Privacy Policy</h1>
-
-        <div className="glass p-8 rounded-lg space-y-8">
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">1. Introduction</h2>
-            <p className="text-gray-400 leading-relaxed">
-              At ImpactHub, we are committed to protecting your privacy and ensuring you have a
-              positive experience on our platform. This Privacy Policy explains how we collect,
-              use, and safeguard your personal information.
-            </p>
+    <div className="max-w-3xl mx-auto px-4 py-20 space-y-8">
+      <h1 className="text-4xl font-bold gradient-text">Privacy Policy</h1>
+      <div className="glass-card space-y-6 text-gray-400 text-sm leading-relaxed">
+        {[
+          { title: "1. Information We Collect", body: "We collect your name, email, golf scores, and payment information to provide the GolfDraw service. Payment data is handled securely by Stripe and never stored on our servers." },
+          { title: "2. How We Use Your Data", body: "Your data is used to manage your subscription, process draw entries, calculate prizes, and distribute charity contributions. We do not sell your data to third parties." },
+          { title: "3. Golf Scores", body: "Your submitted Stableford scores are used solely for draw participation. Only your latest 5 scores are retained at any time." },
+          { title: "4. Payments", body: "All payments are processed by Stripe. We store only your subscription status and plan type — never your card details." },
+          { title: "5. Data Security", body: "We use Supabase with row-level security, HTTPS encryption, and JWT-based authentication to protect your account." },
+          { title: "6. Contact", body: "For privacy enquiries, contact us at privacy@golfdraw.com" },
+        ].map(({ title, body }) => (
+          <section key={title}>
+            <h2 className="text-white font-semibold mb-2">{title}</h2>
+            <p>{body}</p>
           </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">2. Information We Collect</h2>
-            <p className="text-gray-400 leading-relaxed mb-4">
-              We collect information you provide directly to us, such as:
-            </p>
-            <ul className="text-gray-400 list-disc list-inside space-y-2">
-              <li>Account registration information</li>
-              <li>Payment and billing information</li>
-              <li>Communication preferences</li>
-              <li>Profile information and preferences</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">3. How We Use Your Data</h2>
-            <p className="text-gray-400 leading-relaxed mb-4">
-              We use collected information to:
-            </p>
-            <ul className="text-gray-400 list-disc list-inside space-y-2">
-              <li>Provide and improve our services</li>
-              <li>Process donations and manage campaigns</li>
-              <li>Send updates about your contributions</li>
-              <li>Comply with legal obligations</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">4. Data Security</h2>
-            <p className="text-gray-400 leading-relaxed">
-              We implement comprehensive security measures to protect your personal information
-              against unauthorized access, alteration, disclosure, or destruction. All sensitive
-              data is encrypted using industry-standard protocols.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-white mb-4">5. Contact Us</h2>
-            <p className="text-gray-400 leading-relaxed">
-              If you have questions about this Privacy Policy, please contact us at
-              privacy@impacthub.com
-            </p>
-          </section>
-
-          <section className="border-t border-white/10 pt-8">
-            <p className="text-sm text-gray-500">
-              Last updated: {new Date().toLocaleDateString()}
-            </p>
-          </section>
-        </div>
-      </motion.div>
+        ))}
+        <p className="text-xs text-gray-500 border-t border-white/10 pt-4">
+          Last updated: {new Date().toLocaleDateString("en-GB")}
+        </p>
+      </div>
     </div>
   );
 }

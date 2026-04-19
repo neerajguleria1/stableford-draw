@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, Github, Twitter, Linkedin } from "lucide-react";
+import { Mail } from "lucide-react";
 
 export function Footer() {
   return (
@@ -10,114 +10,76 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center space-x-2 mb-4">
+            <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold">✦</span>
+                <span className="text-white font-bold">⛳</span>
               </div>
-              <span className="font-bold text-white">ImpactHub</span>
+              <span className="font-bold text-white">GolfDraw</span>
             </div>
             <p className="text-gray-400 text-sm">
-              Empowering change through transparent charity impact
+              Play golf. Win prizes. Support charity.
             </p>
           </div>
 
-          {/* Quick Links */}
+          {/* Platform */}
           <div>
             <h4 className="text-white font-semibold mb-4">Platform</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/campaigns"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  Campaigns
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/impact"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  Impact Reports
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/about"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  About Us
-                </Link>
-              </li>
+            <ul className="space-y-2 text-sm">
+              {[
+                { label: "Charities", href: "/charities" },
+                { label: "How It Works", href: "/#how-it-works" },
+                { label: "Subscribe", href: "/subscribe" },
+              ].map(({ label, href }) => (
+                <li key={href}>
+                  <Link href={href} className="text-gray-400 hover:text-white transition-colors">{label}</Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Company */}
+          {/* Account */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Company</h4>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/blog"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  Blog
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacy"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  Privacy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/terms"
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  Terms
-                </Link>
-              </li>
+            <h4 className="text-white font-semibold mb-4">Account</h4>
+            <ul className="space-y-2 text-sm">
+              {[
+                { label: "Sign Up", href: "/auth/signup" },
+                { label: "Sign In", href: "/auth/login" },
+                { label: "Dashboard", href: "/dashboard" },
+              ].map(({ label, href }) => (
+                <li key={href}>
+                  <Link href={href} className="text-gray-400 hover:text-white transition-colors">{label}</Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Social */}
+          {/* Legal */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Connect</h4>
-            <div className="flex space-x-4">
-              <a
-                href="#"
-                className="text-gray-400 hover:text-purple-400 transition-colors"
-              >
-                <Twitter size={20} />
-              </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-purple-400 transition-colors"
-              >
-                <Github size={20} />
-              </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-purple-400 transition-colors"
-              >
-                <Linkedin size={20} />
-              </a>
-              <a
-                href="mailto:hello@impacthub.com"
-                className="text-gray-400 hover:text-purple-400 transition-colors"
-              >
-                <Mail size={20} />
-              </a>
-            </div>
+            <h4 className="text-white font-semibold mb-4">Legal</h4>
+            <ul className="space-y-2 text-sm">
+              {[
+                { label: "Privacy Policy", href: "/privacy" },
+                { label: "Terms of Service", href: "/terms" },
+                { label: "About", href: "/about" },
+              ].map(({ label, href }) => (
+                <li key={href}>
+                  <Link href={href} className="text-gray-400 hover:text-white transition-colors">{label}</Link>
+                </li>
+              ))}
+            </ul>
+            <a href="mailto:hello@golfdraw.com"
+              className="flex items-center gap-2 text-gray-400 hover:text-purple-400 transition-colors text-sm mt-4">
+              <Mail size={16} /> hello@golfdraw.com
+            </a>
           </div>
         </div>
 
-        <div className="border-t border-white/10 pt-8">
-          <p className="text-gray-500 text-sm text-center">
-            © 2024 ImpactHub. Building a more transparent, impactful future.
+        <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-2">
+          <p className="text-gray-500 text-sm">
+            © {new Date().getFullYear()} GolfDraw. All rights reserved.
+          </p>
+          <p className="text-gray-600 text-xs">
+            Powered by Next.js · Supabase · Stripe
           </p>
         </div>
       </div>

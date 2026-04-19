@@ -5,41 +5,20 @@ import { AuthProvider } from "@/components/providers/AuthProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ImpactHub - Transparent Charity Platform",
+  title: "GolfDraw — Play Golf. Win Prizes. Support Charity.",
   description:
-    "Empowering change through radical transparency in charitable giving. Track every donation, measure every impact.",
-  keywords: [
-    "charity",
-    "donations",
-    "impact",
-    "transparency",
-    "fundraising",
-    "nonprofit",
-  ],
-  creator: "ImpactHub Team",
+    "Subscribe, enter your Stableford golf scores, and participate in monthly prize draws while supporting a charity of your choice.",
+  keywords: ["golf", "stableford", "charity", "prize draw", "subscription", "monthly draw"],
+  creator: "GolfDraw",
   openGraph: {
     type: "website",
-    locale: "en_US",
-    url: "https://impacthub.com",
-    title: "ImpactHub - Transparent Charity Platform",
-    description:
-      "Empowering change through radical transparency in charitable giving",
-    images: [
-      {
-        url: "https://impacthub.com/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "ImpactHub",
-      },
-    ],
+    locale: "en_GB",
+    title: "GolfDraw — Play Golf. Win Prizes. Support Charity.",
+    description: "Monthly golf prize draws with charity giving built in.",
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="bg-background text-foreground">
