@@ -1,4 +1,5 @@
 # ImpactHub - Transparent Charity Platform
+**Live Demo:** [https://gettrainiq.vercel.app]
 
 A modern, full-stack web application built with Next.js 15, TypeScript, and Tailwind CSS. ImpactHub empowers donors to see exactly where their money goes and the real-world impact it creates through radical transparency.
 
